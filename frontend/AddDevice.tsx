@@ -16,11 +16,24 @@ const AddDeviceForm: React.FC<AddDeviceFormProps> = ({ addDevice }) => {
   const [name, setName] = useState('');
   const [type, setType] = useState<DeviceType>('LIGHT');
   const [status, setStatus] = useState<'ON' | 'OFF'>('OFF');
+  const [error, setError] = useState<string | null>(null);
+
+  const validateDeviceName = (name: string): boolean => {
+    if (name.length < 3) {
+      setError('Device name must be at least 3 characters long.');
+      return false;
+    }
+    setError(null);
+    return true;
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault(); 
+    if (!validateDeviceName(name)) return;
+
     const newDevice: Device = { name, type, status }; 
-    addDevice(newDevice); 
+    addDevice(newDevice);
+    
     setName('');
     setType('LIGHT');
     setStatus('OFF');
@@ -37,6 +50,7 @@ const AddDeviceForm: React.FC<AddDeviceFormProps> = ({ addDevice }) => {
           onChange={(e) => setName(e.target.value)}
           required
         />
+        {error && <div style={{ color: 'red' }}>{error}</div>}
       </div>
       <div>
         <label htmlFor="deviceType">Device Type:</label>
