@@ -28,15 +28,15 @@ const AddDeviceForm: React.FC<AddDeviceFormProps> = ({ addDevice }) => {
   };
 
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault(); 
+    e.preventDefault();
     if (!validateDeviceName(name)) return;
 
-    const newDevice: Device = { name, type, status }; 
+    const newDevice: Device = { name, type, status };
     addDevice(newDevice);
-    
+
     setName('');
-    setType('LIGHT');
-    setStatus('OFF');
+    setType('LIGHT');  
+    setStatus('OFF');  
   };
 
   return (
