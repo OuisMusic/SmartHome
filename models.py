@@ -4,37 +4,37 @@ import os
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///smarthome.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-class Device(db.Model):
+class SmartDevice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
     device_type = db.Column(db.String(80), nullable=False)
-    status = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=False)
     location = db.Column(db.String(100))
 
     def __repr__(self):
-        return f'<Device {self.name}>'
+        return f'<SmartDevice {self.name} - Type {self.device_type}>'
 
-class Scene(db.Model):
+class AutomationScene(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
-    actions = db.relationship('Action', backref='scene', lazy='dynamic')
+    scene_actions = db.relationship('AutomationAction', backref='scene', lazy='dynamic')
 
     def __repr__(self):
-        return f'<Scene {self.name}>'
+        return f'<AutomationScene {self.name}>'
 
-class Action(db.Model):
+class AutomationAction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    device_id = db.Column(db.Integer, db.ForeignKey('device.id'), nullable=False)
-    scene_id = db.Column(db.Integer, db.ForeignKey('scene.id'), nullable=False)
-    action = db.Column(db.String(80), nullable=False)
+    device_id = db.Column(db.Integer, db.ForeignKey('smart_device.id'), nullable=False)
+    scene_id = db.Column(db.Integer, db.ForeignKey('automation_scene.id'), nullable=False)
+    specified_action = db.Column(db.String(80), nullable=False)
 
     def __repr__(self):
-        return f'<Action {self.action} on {self.device_id}>'
+        return f'<AutomationAction {self.specified_action} for Device ID {self.device_id}>'
 
 if __name__ == '__main__':
     with app.app_context():
