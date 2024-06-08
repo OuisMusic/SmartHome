@@ -3,33 +3,32 @@ import os
 
 app = Flask(__name__)
 
-LIGHT_STATUS = os.getenv('LIGHT_STATUS', 'off')
-TEMPERATURE = os.getenv('TEMPERATURE', '20')
+light_status = os.getenv('LIGHT_STATUS', 'off')  # More Pythonic variable naming
+temperature_setting = os.getenv('TEMPERATURE', '20')  # Clearer variable name
 
 @app.route('/status', methods=['GET'])
-def get_status():
-    # Ensuring internal server errors are caught and handled
+def get_device_status():
     try:
         status = {
-            'light': LIGHT_STATUS,
-            'temperature': TEMPERATURE
+            'light': light_status,
+            'temperature': temperature_setting
         }
         return jsonify(status), 200
     except Exception as e:
-        return jsonify({'error': f'Failed to retrieve status: {str(e)}'}), 500
+        return jsonify({'error': f'Failed to retrieve device status: {str(e)}'}), 500
 
 @app.route('/light', methods=['POST'])
-def control_light():
-    global LIGHT_STATUS
+def update_light_status():
+    global light_status
     try:
-        data = request.get_json()
-        if not data:
+        request_data = request.get_json()
+        if not request_data:
             raise ValueError("No data provided")
-        if 'status' in data:
-            LIGHT_STATUS = data['status'].lower()
-            if LIGHT_STATUS not in ['on', 'off']:
+        if 'status' in request_data:
+            light_status = request_data['status'].lower()
+            if light_status not in ['on', 'off']:
                 return jsonify({'error': 'Invalid status, must be "on" or "off"'}), 400
-            return jsonify({'message': f'Light turned {LIGHT_STATUS}'}), 200
+            return jsonify({'message': f'Light turned {light_warning}'}), 200
         else:
             return jsonify({'error': 'Missing status in request'}), 400
     except ValueError as ve:
@@ -37,21 +36,20 @@ def control_light():
     except Exception as e:
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
-
 @app.route('/temperature', methods=['POST'])
-def set_temperature():
-    global TEMPERATURE
+def update_temperature_setting():
+    global temperature_setting
     try:
-        data = request.get_json()
-        if not data:
+        request_data = request.get_json()
+        if not request_data:
             raise ValueError("No data provided")
-        if 'temperature' in data:
-            new_temperature = data['temperature']
+        if 'temperature' in request_data:
+            new_temperature = request_data['temperature']
             try:
-                # Assuming temperature must be a valid integer or float
-                new_temperature = str(int(float(new_temperature)))  # Validate and convert to string representation
-                TEMPERATURE = new_temperature
-                return jsonify({'message': f'Temperature set to {TEMPERATURE} degrees'}), 200
+                # Validate and convert to integer, then back to string for consistency
+                new_temperature = str(int(float(new_temperature)))
+                temperature_setting = new_temperature
+                return jsonify({'message': f'Temperature set to {temperature_setting} degrees'}), 200
             except ValueError:
                 return jsonify({'error': 'Invalid temperature value'}), 400
         else:
@@ -60,7 +58,6 @@ def set_temperature():
         return jsonify({'error': str(ve)}), 400
     except Exception as e:
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
