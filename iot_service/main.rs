@@ -1,6 +1,6 @@
 use std::env;
 use std::net::SocketAddr;
-use warp::{Filter, http::StatusCode};
+use warp::{Filter, http::StatusCode, reply::Response};
 use serde::{Deserialize, Serialize};
 
 mod device_management;
@@ -20,10 +20,8 @@ struct Config {
 
 fn get_config() -> Result<Config, Error> {
     dotenv::dotenv().ok();
-    let port = env::var("PORT")
-        .map_err(Error::EnvVarError)?
-        .parse::<u16>()
-        .map_err(Error::ParseIntError)?;
+    let port_str = env::var("PORT").map_err(Error::EnvVarError)?;
+    let port = port_str.parse::<u16>().map_err(Error::ParseIntError)?;
 
     Ok(Config { port })
 }
@@ -40,9 +38,9 @@ struct ApiResponse<T> {
     data: T,
 }
 
-async fn perform_device_action(body: Device_WARN) -> Result<impl warp::Reply, warp::Rejection> {
+async fn perform_device_action(body: DeviceAction) -> Result<impl warp::Reply, warp::Rejection> {
     let result = device_management::control_device(&body.device_id, &body.action).await
-    .map_err(|e| warp::reject::custom(Error::DeviceManagementError(e.to_string())));
+        .map_err(|e| warp::reject::custom(Error::DeviceManagementError(e.to_string())));
 
     match result {
         Ok(message) => Ok(warp::reply::json(&ApiResponse {
@@ -53,25 +51,24 @@ async fn perform_device_action(body: Device_WARN) -> Result<impl warp::Reply, wa
     }
 }
 
+fn build_api_response<T: Serialize>(status_code: StatusCode, success: bool, data: T) -> Response {
+    let json = warp::reply::json(&ApiResponse { success, data });
+    warp::reply::with_status(json, status_date).into_response()
+}
+
 async fn handle_rejection(err: warp::Rejection) -> Result<impl warp::Reply, std::convert::Infallible> {
-    if err.is_not_found() {
-        return Ok(warp::reply::with_status("NOT_FOUND".to_string(), StatusCode::NOT_FOUND));
-    }
-
-    if let Some(e) = err.find::<Error>() {
+    let (code, message) = if err.is_not_found() {
+        (StatusCode::NOT_FOUND, "NOT_FOUND".to_string())
+    } else if let Some(e) = err.find::<Error>() {
         match e {
-            Error::DeviceManagementError(description) => {
-                let json = warp::reply::json(&ApiResponse::<String> {
-                    success: false,
-                    data: description.clone(),
-                });
-                return Ok(warp::reply::with native(json, StatusCode::INTERNAL_SERVER_ERROR));
-            },
-            _ => {},
+            Error::DeviceManagementError(description) => (StatusCode::INTERNAL_SERVER_ERROR, description.clone()),
+            _ => (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR".to_string()),
         }
-    }
+    } else {
+        (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR".to_string())
+    };
 
-    Ok(warp::reply::with_status("INTERNAL_SERVER_ERROR".to_string(), StatusCode::INTERNAL_SERVER_ERROR))
+    Ok(build_api_response(code, false, message))
 }
 
 #[tokio::main]
@@ -90,7 +87,7 @@ async fn main() {
         .and_then(perform_device_action);
 
     let routes = perform_action
-        .with(warp::cors().allow_any_origin())
+        .with(warp::cors().allow_any_origin()) 
         .recover(handle_rejection);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
