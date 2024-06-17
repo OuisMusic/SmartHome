@@ -1,0 +1,59 @@
+import React, { useState } from 'react';
+
+const NewDeviceForm = ({ addDevice }) => {
+  const [deviceName, setDeviceName] = useState('');
+  const [deviceType, setDeviceType] = useState('');
+  const [deviceStatus, setDeviceStatus] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    addService({
+      name: deviceName,
+      type: deviceType,
+      status: deviceStatus,
+    });
+
+    setDeviceName('');
+    setDeviceType('');
+    setDeviceStatus('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="deviceName">Device Name:</label>
+      <input
+        type="text"
+        id="deviceName"
+        value={deviceName}
+        onChange={(e) => setDeviceName(e.target.value)}
+      />
+
+      <label htmlFor="deviceType">Device Type:</label>
+      <select
+        id="deviceType"
+        value={deviceType}
+        onChange={(e) => setDeviceType(e.target.value)}
+      >
+        <option value="">Select Type</option>
+        <option value="Light">Light</option>
+        <option value="Thermostat">Thermostat</option>
+        <option value="Camera">Camera</option>
+      </select>
+
+      <label htmlFor="deviceStatus">Initial Status:</label>
+      <select
+        id="deviceStatus"
+        value={deviceStatus}
+        onChange={(e) => setDeviceStatus(e.target.value)}
+      >
+        <option value="">Select Status</option>
+        <option value="On">On</option>
+        <option value="Off">Off</option>
+      </select>
+
+      <button type="submit">Add Device</button>
+    </form>
+  );
+};
+
+export default NewConceptForm;
