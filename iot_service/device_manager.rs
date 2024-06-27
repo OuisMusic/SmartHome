@@ -10,14 +10,18 @@ mod smart_home {
         sync_interval: Duration,
     }
 
+    #[derive(Debug)]
+    pub enum DeviceError {
+        DeviceNotFound(String),
+        EnvVarError(String),
+    }
+
     impl DeviceManager {
-        pub fn new() -> Self {
+        pub fn new() -> Result<Self, DeviceError> {
             let mut devices = HashMap::new();
 
-            let device_names = env::var("DEVICE_NAMES")
-                .unwrap_or_else(|_| "Light,Heater,Fan".to_string());
-            let device_states = env::var("DEVICE_STATES")
-                .unwrap_or_else(|_| "false,false,false".to_string());
+            let device_names = env::var("DEVICE_NAMES").map_err(|_| DeviceError::EnvVarError("Failed to read DEVICE_NAMES from environment".to_string()))?;
+            let device_states = env::var("DEVICE_STATES").map_err(|_| DeviceError::EnvVarError("Failed to read DEVICE_STATES from environment".to_string()))?;
 
             let names_vec: Vec<&str> = device_names.split(',').collect();
             let states_vec: Vec<&str> = device_states.split(',').collect();
@@ -29,29 +33,29 @@ mod smart_home {
                 }
             }
 
-            DeviceManager { 
+            Ok(DeviceManager { 
                 devices,
                 last_sync: Instant::now(),
-                sync_interval: Duration::from_secs(60), // Adjust as appropriate for your use case
-            }
+                sync_interval: Duration::from_secs(60),
+            })
         }
 
-        pub fn turn_on(&mut self, device_name: &str) -> bool {
-            self.batch_process(); // Check for batching before applying a command
+        pub fn turn_on(&mut self, device_name: &str) -> Result<bool, DeviceError> {
+            self.batch_process(); 
             self.set_device_state(device_name, true)
         }
 
-        pub fn turn_off(&mut self, device_name: &str) -> bool {
-            self.batch_process(); // Check for batching before applying a command
+        pub fn turn_off(&mut self, device_name: &str) -> Result<bool, DeviceError> {
+            self.batch_process(); 
             self.set_device_state(device_name, false)
         }
 
-        fn set_device_state(&mut self, device_name: &str, state: bool) -> bool {
+        fn set_device_state(&mut self, device_name: &str, state: bool) -> Result<bool, DeviceError> {
             if let Some(device_state) = self.devices.get_mut(device_name) {
                 *device_state = state;
-                true // Theoretically, an API call could be made here
+                Ok(true) 
             } else {
-                false
+                Err(DeviceError::DeviceNotFound(device_name.to_string()))
             }
         }
 
@@ -61,16 +65,8 @@ mod smart_home {
 
         fn batch_process(&mut self) {
             if self.last_sync.elapsed() >= self.sync_interval {
-                // Placeholder for an API call to batch process device state changes
                 println!("Syncing device states...");
-
-                // Update last_sync time after the batch operation
                 self.last_sync = Instant::now();
-                // Here, you would send out all the queued commands or state changes
-                // In a real implementation, this would involve consolidating the changes and making a single or minimal number of API calls
-
-                // This sleep is for demonstration. In actual implementation, this would rather be the time taken by the API call(s) 
-                // to update the device states remotely
                 thread::sleep(Duration::from_millis(100)); 
             }
         }
@@ -78,20 +74,23 @@ mod smart_home {
 }
 
 fn main() {
-    let mut manager = smart_home::DeviceManager::new();
+    let mut manager = match smart_home::DeviceManager::new() {
+        Ok(manager) => manager,
+        Err(e) => {
+            eprintln!("Failed to initialize device manager: {:?}", e);
+            return;
+        },
+    };
 
-    manager.turn_on("Light");
-    println!(
-        "Light status: {}",
-        manager.check_status("Light").unwrap_or(false)
-    );
+    match manager.turn_on("Light") {
+        Ok(_) => println!("Light status: {}", manager.check_status("Light").unwrap_or(false)),
+        Err(e) => eprintln!("Error turning on the Light: {:?}", e),
+    }
 
-    // Simulate a bit of a delay to showcase batching could happen
     std::thread::sleep(std::time::Duration::from_secs(1)); 
 
-    manager.turn_off("Heater");
-    println!(
-        "Heater status: {}",
-        manager.check_status("Heater").unwrap_or(false)
-    );
+    match manager.turn_off("Heater") {
+        Ok(_) => println!("Heater status: {}", manager.check_status("Heater").unwrap_or(false)),
+        Err(e) => eprintln!("Error turning off the Heater: {:?}", e),
+    };
 }
