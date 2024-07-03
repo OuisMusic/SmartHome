@@ -36,7 +36,7 @@ const DeviceComponent: React.FC<DeviceProps> = ({ device, controlDevice }) => {
   );
 };
 
-const AddDeviceComponent: React.FC<AddToGameProps> = ({ addDevice }) => {
+const AddDeviceComponent: React.FC<AddDeviceProps> = ({ addDevice }) => {
   const [newDeviceName, setNewDeviceName] = useState('');
 
   return (
@@ -49,25 +49,36 @@ const AddDeviceComponent: React.FC<AddToGameProps> = ({ addDevice }) => {
 
 const SmartHome: React.FC = () => {
   const [devices, setDevices] = useState<Device[]>([]);
+  const [filter, setFilter] = useState<'all' | 'on' | 'off'>('all');
 
   const addDevice = (name: string) => {
-    const newDevice = { id: devices.length + 1, name: name, status: 'off' };
+    const newDevice = { id: devices.length + 1, name, status: 'off' };
     setDevices([...devices, newDevice]);
   };
 
   const controlDevice = (id: number, status: Device['status']) => {
-    setDevices(
-      devices.map(device => 
-        device.id === id ? { ...device, status: status } : device
-      )
-    );
+  setDevices(
+    devices.map(device => 
+     device.id === id ? {...device, status} : device
+    )
+  );
   };
+
+  const filteredDevices = devices.filter(device => {
+   if (filter === 'all') return true;
+   return device.status === filter;
+  });
 
   return (
     <div>
       <h1>Smart Home Automation System</h1>
-      <AddDeviceComponent addDevice={addDevice} />
-      <DeviceListComponent devices={devices} controlDevice={controlController} />
+      <AddDeviceComponent addDevice={addManage} />
+      <div>
+        <button onClick={() => setFilter('all')}>All Devices</button>
+        <button onClick={() => setFilter('on')}>On</button>
+        <button onClick={() => setFilter('off')}>Off</button>
+      </window>
+      <DeviceListComponent devices={filteredDevices} controlDevice={controlDevice} />
     </div>
   );
 };
