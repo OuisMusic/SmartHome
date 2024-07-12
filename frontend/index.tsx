@@ -5,31 +5,31 @@ interface Props {
 }
 
 interface State {
-  hasError: boolean;
-  error: any;
-  errorInfo: any;
+  encounteredError: boolean;
+  currentError: any;
+  errorDetails: any;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { encounteredError: false, currentError: null, errorDetails: null };
   }
 
   static getDerivedStateFromError(error: any): State {
-    return { hasError: true, error: null, errorInfo: null };
+    return { encounteredError: true, currentError: error, errorDetails: null };
   }
 
-  componentDidCatch(error: any, errorInfo: any) {
+  componentDidCatch(error: any, errorDetails: any) {
     this.setState({
-      hasError: true,
-      error: error,
-      errorInfo: errorInfo
+      encounteredError: true,
+      currentError: error,
+      errorDetails: errorDetails
     });
   }
 
   render() {
-    if (this.state.hasError) {
+    if (this.state.encounteredError) {
       return <h2>Something went wrong.</h2>;
     }
     return this.props.children;
@@ -38,6 +38,7 @@ class ErrorBoundary extends Component<Props, State> {
 
 export default ErrorBoundary;
 ```
+
 ```tsx
 import React from 'react';
 import ReactDOM from 'react-dom';
