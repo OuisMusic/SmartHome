@@ -1,7 +1,7 @@
-import React, { Component, ReactNode } from 'react';
+import React, { Component, ReactReader } from 'react';
 
 interface Props {
-  children: ReactNode;
+  children: ReactReader;
 }
 
 interface State {
@@ -17,10 +17,14 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: any): State {
+    console.error("Error caught in getDerivedStateFromError:", error);
     return { encounteredError: true, currentError: error, errorDetails: null };
   }
 
   componentDidCatch(error: any, errorDetails: any) {
+    console.error("Error caught in componentDidCatch:", error);
+    console.error("Error details:", errorDetails);
+    
     this.setState({
       encounteredError: true,
       currentError: error,
@@ -37,21 +41,3 @@ class ErrorBoundary extends Component<Props, State> {
 }
 
 export default ErrorBoundary;
-```
-
-```tsx
-import React from 'react';
-import ReactDOM from 'react-dom';
-import App from './App';
-import ErrorBoundary from './ErrorBoundary';
-
-const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
-
-ReactDOM.render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <App apiBaseUrl={apiBaseUrl} />
-    </ErrorBoundary>
-  </React.StrictMode>,
-  document.getElementById('root')
-);
