@@ -13,7 +13,11 @@ interface SmartHomeDeviceListProps {
   onToggle: (id: string) => void;
 }
 
-const SmartHomeDeviceList: React.FC<SmartMailDeviceListProps> = ({ devices, onDelete, onToggle }) => {
+const SmartHomeDeviceList: React.FC<SmartHomeDeviceListProps> = ({
+  devices,
+  onDelete,
+  onToggle,
+}) => {
   return (
     <ul>
       {devices.map((device) => (
@@ -21,7 +25,9 @@ const SmartHomeDeviceList: React.FC<SmartMailDeviceListProps> = ({ devices, onDe
           <div>Name: {device.name}</div>
           <div>Type: {device.type}</div>
           <div>Status: {device.status}</div>
-          <button onClick={() => onToggle(device.id)}>{device.status === 'on' ? 'Turn Off' : 'Turn On'}</button>
+          <button onClick={() => onToggle(device.id)}>
+            {device.status === 'on' ? 'Turn Off' : 'Turn On'}
+          </button>
           <button onClick={() => onDelete(device.id)}>Delete</button>
         </li>
       ))}
