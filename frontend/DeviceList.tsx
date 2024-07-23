@@ -16,23 +16,33 @@ interface SmartHomeDeviceListProps {
 const SmartHomeDeviceList: React.FC<SmartHomeDeviceListProps> = ({
   devices,
   onDelete,
-  onToggle,
-}) => {
-  return (
-    <ul>
-      {devices.map((device) => (
-        <li key={device.id}>
-          <div>Name: {device.name}</div>
-          <div>Type: {device.type}</div>
-          <div>Status: {device.status}</div>
-          <button onClick={() => onToggle(device.id)}>
-            {device.status === 'on' ? 'Turn Off' : 'Turn On'}
-          </button>
-          <button onClick={() => onDelete(device.id)}>Delete</button>
-        </li>
-      ))}
-    </ul>
+  on(C) => {
+
+  const renderDeviceControls = (device: Device) => (
+    <>
+      <button onClick={() => onToggle(device.id)}>
+        {device.status === 'on' ? 'Turn Off' : 'Turn On'}
+      </button>
+      <button onClick={() => onDelete(device.id)}>Delete</button>
+    </>
   );
+
+  const renderDeviceInfo = (device: Device) => (
+    <>
+      <div>Name: {device.name}</div>
+      <div>Type: {device.type}</div>
+      <div>Status: {device.status}</div>
+    </>
+  );
+
+  const renderDeviceItem = (device: Device) => (
+    <li key={device.id}>
+      {renderDeviceInfo(device)}
+      {renderDeviceControls(device)}
+    </li>
+  );
+
+  return <ul>{devices.map(renderDeviceItem)}</ul>;
 };
 
 export default SmartHomeDeviceList;
