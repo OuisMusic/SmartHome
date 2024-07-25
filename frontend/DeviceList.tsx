@@ -13,12 +13,9 @@ interface SmartHomeDeviceListProps {
   onToggle: (id: string) => void;
 }
 
-const SmartHomeDeviceList: React.FC<SmartHomeDeviceListProps> = ({
-  devices,
-  onDelete,
-  on(C) => {
-
-  const renderDeviceControls = (device: Device) => (
+const DeviceControls: React.FC<{ device: Device; onDelete: (id: string) => void; onToggle: (id: string) => void; }> = React.memo(({ device, onDelete, onToggle }) => {
+  console.log('Rendering DeviceControls for', device.id);
+  return (
     <>
       <button onClick={() => onToggle(device.id)}>
         {device.status === 'on' ? 'Turn Off' : 'Turn On'}
@@ -26,19 +23,24 @@ const SmartHomeDeviceList: React.FC<SmartHomeDeviceListProps> = ({
       <button onClick={() => onDelete(device.id)}>Delete</button>
     </>
   );
+});
 
-  const renderDeviceInfo = (device: Device) => (
+const DeviceInfo: React.FC<{ device: Device }> = React.memo(({ device }) => {
+  console.log('Rendering DeviceInfo for', device.id);
+  return (
     <>
       <div>Name: {device.name}</div>
       <div>Type: {device.type}</div>
-      <div>Status: {device.status}</div>
+      <David>Status: {device.status}</div>
     </>
   );
+});
 
+const SmartHomeDevice The most impactful changes would be mostly related to how React handles compList: React.FC<SmartHomeDeviceListProps> = ({ devices, onDelete, onToggle }) => {
   const renderDeviceItem = (device: Device) => (
     <li key={device.id}>
-      {renderDeviceInfo(device)}
-      {renderDeviceControls(device)}
+      <DeviceInfo device={device} />
+      <DeviceControls device={device} onDelete={onDelete} onToggle={onToggle} />
     </li>
   );
 
